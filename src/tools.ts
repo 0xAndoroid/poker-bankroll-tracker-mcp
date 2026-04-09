@@ -9,7 +9,8 @@ function formatSession(session: Session) {
   return {
     id: session.id,
     type: session.type,
-    date: session.start,
+    start: session.start,
+    end: session.end,
     location: session.location,
     locationType: session.location_type,
     currency: session.currency,
