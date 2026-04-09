@@ -9,7 +9,7 @@ function formatSession(session: Session) {
   return {
     id: session.id,
     type: session.type,
-    date: session.start,
+    startedAt: session.start.replace(" ", "T"),
     location: session.location,
     locationType: session.location_type,
     currency: session.currency,
