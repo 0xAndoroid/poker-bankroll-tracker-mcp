@@ -6,14 +6,24 @@ import { computeProfit, computeStats, formatStakes } from "./stats.js";
 import { PbtApiError } from "./errors.js";
 
 function formatSession(session: Session) {
-  return {
+  const base = {
     id: session.id,
     type: session.type,
     startedAt: session.start.replace(" ", "T"),
-    endedAt: session.end.replace(" ", "T"),
     location: session.location,
     locationType: session.location_type,
     currency: session.currency,
+    profit: computeProfit(session),
+    private: session.private,
+  };
+
+  if (session.amount !== undefined) {
+    return { ...base, amount: session.amount };
+  }
+
+  return {
+    ...base,
+    endedAt: session.end?.replace(" ", "T"),
     buyin: session.buyin,
     cashout: session.cashout,
     rebuys: session.number_of_rebuys,
@@ -21,9 +31,7 @@ function formatSession(session: Session) {
     expenses: session.expenses,
     expensesInChips: session.expenses_in_chips,
     currencyExchangeRate: session.currency_exchange_rate,
-    profit: computeProfit(session),
     staking: session.staking,
-    private: session.private,
     ...(session.type === "cashgame" && {
       stakes: formatStakes(session),
       game: session.game,

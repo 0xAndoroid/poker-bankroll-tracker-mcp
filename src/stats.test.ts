@@ -7,6 +7,7 @@ function makeCashGame(overrides: Partial<Session> = {}): Session {
     id: 1,
     type: "cashgame",
     start: "2026-03-15 19:00:00",
+    end: "2026-03-16 03:00:00",
     location: "Bellagio",
     location_type: "Casino",
     currency: "USD",
@@ -36,6 +37,7 @@ function makeTournament(overrides: Partial<Session> = {}): Session {
     id: 2,
     type: "tournament",
     start: "2026-03-16 12:00:00",
+    end: "2026-03-16 20:00:00",
     location: "Aria",
     location_type: "Casino",
     currency: "USD",
@@ -47,6 +49,23 @@ function makeTournament(overrides: Partial<Session> = {}): Session {
     expenses_in_chips: 0,
     currency_exchange_rate: "1.000000000000",
     staking: false,
+    private: false,
+    ...overrides,
+  };
+}
+
+function makeSimpleSession(
+  type: "payout" | "costs" | "casinogame" | "jackpot",
+  overrides: Partial<Session> = {},
+): Session {
+  return {
+    id: 3,
+    type,
+    start: "2026-04-09 12:50:00",
+    location: "",
+    location_type: "Online",
+    currency: "USD",
+    amount: 0,
     private: false,
     ...overrides,
   };
@@ -91,6 +110,22 @@ describe("computeProfit", () => {
   it("returns zero for a break-even session", () => {
     const session = makeCashGame({ buyin: 500, cashout: 500 });
     expect(computeProfit(session)).toBe(0);
+  });
+
+  it("returns amount directly for payout session", () => {
+    expect(computeProfit(makeSimpleSession("payout", { amount: 50 }))).toBe(50);
+  });
+
+  it("returns negative amount for costs session", () => {
+    expect(computeProfit(makeSimpleSession("costs", { amount: -20 }))).toBe(-20);
+  });
+
+  it("returns amount for casinogame session", () => {
+    expect(computeProfit(makeSimpleSession("casinogame", { amount: -10 }))).toBe(-10);
+  });
+
+  it("returns amount for jackpot session", () => {
+    expect(computeProfit(makeSimpleSession("jackpot", { amount: 100 }))).toBe(100);
   });
 });
 
@@ -207,5 +242,21 @@ describe("computeStats", () => {
     const sessions = [makeCashGame({ location: "" })];
     const stats = computeStats(sessions);
     expect(stats.byLocation["Unknown"]).toBeDefined();
+  });
+
+  it("includes simple session types in aggregates", () => {
+    const sessions = [
+      makeCashGame({ id: 1, buyin: 500, cashout: 1200, location: "Bellagio" }),
+      makeSimpleSession("jackpot", { id: 2, amount: 100, location: "Bellagio", start: "2026-03-15 20:00:00" }),
+      makeSimpleSession("costs", { id: 3, amount: -50, location: "Online", start: "2026-04-01 10:00:00" }),
+    ];
+    const stats = computeStats(sessions);
+
+    expect(stats.totalSessions).toBe(3);
+    expect(stats.totalProfit).toBe(750);
+    expect(stats.winRate).toBeCloseTo(66.67, 1);
+    expect(stats.byLocation["Bellagio"]).toEqual({ sessions: 2, profit: 800 });
+    expect(stats.byMonth["2026-04"]).toEqual({ sessions: 1, profit: -50 });
+    expect(Object.keys(stats.byStakes)).toHaveLength(1);
   });
 });

@@ -51,6 +51,50 @@ const TOURNAMENT_SESSION: Session = {
   private: false,
 };
 
+const PAYOUT_SESSION: Session = {
+  id: 103,
+  type: "payout",
+  start: "2026-04-09 12:50:00",
+  location: "",
+  location_type: "Home Game",
+  currency: "USD",
+  amount: 1,
+  private: true,
+};
+
+const COSTS_SESSION: Session = {
+  id: 104,
+  type: "costs",
+  start: "2026-04-09 12:50:00",
+  location: "Blue diamonds (online)",
+  location_type: "Online",
+  currency: "USD",
+  amount: -2,
+  private: true,
+};
+
+const CASINOGAME_SESSION: Session = {
+  id: 105,
+  type: "casinogame",
+  start: "2026-04-09 12:46:00",
+  location: "Blue diamonds (online)",
+  location_type: "Online",
+  currency: "USD",
+  amount: -1,
+  private: false,
+};
+
+const JACKPOT_SESSION: Session = {
+  id: 106,
+  type: "jackpot",
+  start: "2026-04-09 12:49:00",
+  location: "Blue diamonds (online)",
+  location_type: "Online",
+  currency: "USD",
+  amount: 1,
+  private: false,
+};
+
 type ToolHandler = (args: Record<string, unknown>) => Promise<{
   content: Array<{ type: string; text: string }>;
   isError?: boolean;
@@ -106,6 +150,41 @@ describe("MCP Tools", () => {
       expect(data[1].profit).toBe(600);
       expect(data[1].stakes).toBeUndefined();
       expect(data[1].smallBlind).toBeUndefined();
+    });
+
+    it("formats simple session types with amount", async () => {
+      vi.spyOn(client, "fetchSessions").mockResolvedValue([
+        PAYOUT_SESSION,
+        COSTS_SESSION,
+        CASINOGAME_SESSION,
+        JACKPOT_SESSION,
+      ]);
+
+      const handler = tools.get("get_sessions")!;
+      const result = await handler({});
+      const data = JSON.parse(result.content[0].text);
+
+      expect(data).toHaveLength(4);
+
+      expect(data[0].type).toBe("payout");
+      expect(data[0].amount).toBe(1);
+      expect(data[0].profit).toBe(1);
+      expect(data[0].private).toBe(true);
+      expect(data[0].endedAt).toBeUndefined();
+      expect(data[0].buyin).toBeUndefined();
+      expect(data[0].staking).toBeUndefined();
+
+      expect(data[1].type).toBe("costs");
+      expect(data[1].amount).toBe(-2);
+      expect(data[1].profit).toBe(-2);
+
+      expect(data[2].type).toBe("casinogame");
+      expect(data[2].amount).toBe(-1);
+      expect(data[2].profit).toBe(-1);
+
+      expect(data[3].type).toBe("jackpot");
+      expect(data[3].amount).toBe(1);
+      expect(data[3].profit).toBe(1);
     });
 
     it("passes filters to API client", async () => {

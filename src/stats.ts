@@ -1,7 +1,8 @@
 import type { Session } from "./types.js";
 
 export function computeProfit(session: Session): number {
-  return session.cashout - session.buyin - session.rebuy_costs - session.expenses;
+  if (session.amount !== undefined) return session.amount;
+  return (session.cashout ?? 0) - (session.buyin ?? 0) - (session.rebuy_costs ?? 0) - (session.expenses ?? 0);
 }
 
 export function formatStakes(session: Session): string {

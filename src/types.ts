@@ -13,19 +13,22 @@ export interface Session {
   id: number;
   type: SessionType;
   start: string;
-  end: string;
   location: string;
   location_type: string;
   currency: string;
-  buyin: number;
-  cashout: number;
-  number_of_rebuys: number;
-  rebuy_costs: number;
-  expenses: number;
-  expenses_in_chips: number;
-  currency_exchange_rate: string;
-  staking: boolean;
   private: boolean;
+  // Full sessions (cashgame, tournament)
+  end?: string;
+  buyin?: number;
+  cashout?: number;
+  number_of_rebuys?: number;
+  rebuy_costs?: number;
+  expenses?: number;
+  expenses_in_chips?: number;
+  currency_exchange_rate?: string;
+  staking?: boolean;
+  // Simple sessions (payout, costs, casinogame, jackpot)
+  amount?: number;
   // Cash game only
   limit?: string;
   game?: string;
