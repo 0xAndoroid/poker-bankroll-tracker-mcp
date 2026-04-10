@@ -29,15 +29,24 @@ export interface Session {
   staking?: boolean;
   // Simple sessions (payout, costs, casinogame, jackpot)
   amount?: number;
-  // Cash game only
+  // Cash game and tournament shared
   limit?: string;
   game?: string;
   table_size?: string;
+  hands_per_hour?: number;
+  // Cash game only
   small_blind?: number;
   big_blind?: number;
   third_blind?: number;
   ante?: number;
-  hands_per_hour?: number;
+  // Tournament only
+  addon_costs?: number;
+  bounty_winnings?: number;
+  place?: number;
+  itm?: number;
+  players?: number;
+  shares_income?: number;
+  shares_outgoing?: number;
 }
 
 export interface SessionsResponse {

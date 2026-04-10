@@ -45,10 +45,20 @@ const TOURNAMENT_SESSION: Session = {
   number_of_rebuys: 0,
   rebuy_costs: 0,
   expenses: 0,
-  expenses_in_chips: 0,
   currency_exchange_rate: "1.000000000000",
   staking: false,
   private: false,
+  limit: "No Limit",
+  game: "NLH",
+  table_size: "Full-Ring",
+  hands_per_hour: 75,
+  addon_costs: 0,
+  bounty_winnings: 50,
+  place: 3,
+  itm: 5,
+  players: 120,
+  shares_income: 200,
+  shares_outgoing: 0,
 };
 
 const PAYOUT_SESSION: Session = {
@@ -147,7 +157,19 @@ describe("MCP Tools", () => {
       expect(data[0].thirdBlind).toBe(0);
       expect(data[0].ante).toBe(0);
       expect(data[1].id).toBe(102);
+      expect(data[1].endedAt).toBe("2026-03-16T20:00:00");
       expect(data[1].profit).toBe(600);
+      expect(data[1].game).toBe("NLH");
+      expect(data[1].limit).toBe("No Limit");
+      expect(data[1].tableSize).toBe("Full-Ring");
+      expect(data[1].handsPerHour).toBe(75);
+      expect(data[1].addonCosts).toBe(0);
+      expect(data[1].bountyWinnings).toBe(50);
+      expect(data[1].place).toBe(3);
+      expect(data[1].itm).toBe(5);
+      expect(data[1].players).toBe(120);
+      expect(data[1].sharesIncome).toBe(200);
+      expect(data[1].sharesOutgoing).toBe(0);
       expect(data[1].stakes).toBeUndefined();
       expect(data[1].smallBlind).toBeUndefined();
     });
@@ -173,6 +195,8 @@ describe("MCP Tools", () => {
       expect(data[0].endedAt).toBeUndefined();
       expect(data[0].buyin).toBeUndefined();
       expect(data[0].staking).toBeUndefined();
+      expect(data[0].addonCosts).toBeUndefined();
+      expect(data[0].place).toBeUndefined();
 
       expect(data[1].type).toBe("costs");
       expect(data[1].amount).toBe(-2);
