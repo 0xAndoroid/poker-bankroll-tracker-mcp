@@ -27,6 +27,9 @@ function formatSession(session: Session) {
   if (session.expenses_in_chips != null) result.expensesInChips = session.expenses_in_chips;
   if (session.currency_exchange_rate != null) result.currencyExchangeRate = session.currency_exchange_rate;
   if (session.staking != null) result.staking = session.staking;
+  if (session.staking_player != null) result.stakingPlayer = session.staking_player;
+  if (session.shares_income != null) result.sharesIncome = session.shares_income;
+  if (session.shares_outgoing != null) result.sharesOutgoing = session.shares_outgoing;
   if (session.game != null) result.game = session.game;
   if (session.limit != null) result.limit = session.limit;
   if (session.table_size != null) result.tableSize = session.table_size;
@@ -46,8 +49,6 @@ function formatSession(session: Session) {
     if (session.place != null) result.place = session.place;
     if (session.itm != null) result.itm = session.itm;
     if (session.players != null) result.players = session.players;
-    if (session.shares_income != null) result.sharesIncome = session.shares_income;
-    if (session.shares_outgoing != null) result.sharesOutgoing = session.shares_outgoing;
   }
 
   return result;

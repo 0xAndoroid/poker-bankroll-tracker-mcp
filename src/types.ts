@@ -27,6 +27,9 @@ export interface Session {
   expenses_in_chips?: number;
   currency_exchange_rate?: string;
   staking?: boolean;
+  staking_player?: string;
+  shares_income?: number;
+  shares_outgoing?: number;
   // Simple sessions (payout, costs, casinogame, jackpot)
   amount?: number;
   // Cash game and tournament shared
@@ -45,8 +48,6 @@ export interface Session {
   place?: number;
   itm?: number;
   players?: number;
-  shares_income?: number;
-  shares_outgoing?: number;
 }
 
 export interface SessionsResponse {

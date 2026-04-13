@@ -21,6 +21,9 @@ const CASH_SESSION: Session = {
   expenses_in_chips: 0,
   currency_exchange_rate: "1.000000000000",
   staking: false,
+  staking_player: "Mike",
+  shares_income: 100,
+  shares_outgoing: 50,
   private: false,
   limit: "No Limit",
   game: "NLH",
@@ -47,6 +50,7 @@ const TOURNAMENT_SESSION: Session = {
   expenses: 0,
   currency_exchange_rate: "1.000000000000",
   staking: false,
+  staking_player: "Sarah",
   private: false,
   limit: "No Limit",
   game: "NLH",
@@ -151,6 +155,9 @@ describe("MCP Tools", () => {
       expect(data[0].currencyExchangeRate).toBe("1.000000000000");
       expect(data[0].private).toBe(false);
       expect(data[0].profit).toBe(700);
+      expect(data[0].stakingPlayer).toBe("Mike");
+      expect(data[0].sharesIncome).toBe(100);
+      expect(data[0].sharesOutgoing).toBe(50);
       expect(data[0].stakes).toBe("NLH 1/2");
       expect(data[0].smallBlind).toBe(1);
       expect(data[0].bigBlind).toBe(2);
@@ -158,6 +165,7 @@ describe("MCP Tools", () => {
       expect(data[0].ante).toBe(0);
       expect(data[1].id).toBe(102);
       expect(data[1].endedAt).toBe("2026-03-16T20:00:00");
+      expect(data[1].stakingPlayer).toBe("Sarah");
       expect(data[1].profit).toBe(600);
       expect(data[1].game).toBe("NLH");
       expect(data[1].limit).toBe("No Limit");
@@ -194,7 +202,6 @@ describe("MCP Tools", () => {
       expect(data).toHaveLength(4);
 
       const fullSessionKeys = [
-        "endedAt",
         "buyin",
         "cashout",
         "rebuys",
@@ -203,6 +210,7 @@ describe("MCP Tools", () => {
         "expensesInChips",
         "currencyExchangeRate",
         "staking",
+        "stakingPlayer",
         "game",
         "limit",
         "tableSize",
