@@ -6,18 +6,18 @@ function makeCashGame(overrides: Partial<Session> = {}): Session {
   return {
     id: 1,
     type: "cashgame",
-    start: "2026-03-15 19:00:00",
-    end: "2026-03-16 03:00:00",
+    start: "2026-03-15T19:00:00",
+    end: "2026-03-16T03:00:00",
     location: "Bellagio",
     location_type: "Casino",
     currency: "USD",
     buyin: 500,
     cashout: 1200,
-    number_of_rebuys: 0,
-    rebuy_costs: 0,
+    rebuys: 0,
+    rebuy_cost: 0,
     expenses: 0,
     expenses_in_chips: 0,
-    currency_exchange_rate: "1.000000000000",
+    exchange_rate: "1.000000000000",
     staking: false,
     private: false,
     limit: "No Limit",
@@ -36,18 +36,18 @@ function makeTournament(overrides: Partial<Session> = {}): Session {
   return {
     id: 2,
     type: "tournament",
-    start: "2026-03-16 12:00:00",
-    end: "2026-03-16 20:00:00",
+    start: "2026-03-16T12:00:00",
+    end: "2026-03-16T20:00:00",
     location: "Aria",
     location_type: "Casino",
     currency: "USD",
     buyin: 200,
     cashout: 0,
-    number_of_rebuys: 1,
-    rebuy_costs: 200,
+    rebuys: 1,
+    rebuy_cost: 200,
     expenses: 0,
     expenses_in_chips: 0,
-    currency_exchange_rate: "1.000000000000",
+    exchange_rate: "1.000000000000",
     staking: false,
     private: false,
     ...overrides,
@@ -61,7 +61,7 @@ function makeSimpleSession(
   return {
     id: 3,
     type,
-    start: "2026-04-09 12:50:00",
+    start: "2026-04-09T12:50:00",
     location: "",
     location_type: "Online",
     currency: "USD",
@@ -83,7 +83,7 @@ describe("computeProfit", () => {
   });
 
   it("accounts for rebuy costs", () => {
-    const session = makeCashGame({ buyin: 500, cashout: 1000, rebuy_costs: 300 });
+    const session = makeCashGame({ buyin: 500, cashout: 1000, rebuy_cost: 300 });
     expect(computeProfit(session)).toBe(200);
   });
 
@@ -96,7 +96,7 @@ describe("computeProfit", () => {
     const session = makeCashGame({
       buyin: 500,
       cashout: 1500,
-      rebuy_costs: 200,
+      rebuy_cost: 200,
       expenses: 100,
     });
     expect(computeProfit(session)).toBe(700);

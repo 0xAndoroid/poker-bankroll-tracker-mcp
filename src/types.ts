@@ -21,11 +21,11 @@ export interface Session {
   end?: string;
   buyin?: number;
   cashout?: number;
-  number_of_rebuys?: number;
-  rebuy_costs?: number;
+  rebuys?: number;
+  rebuy_cost?: number;
   expenses?: number;
   expenses_in_chips?: number;
-  currency_exchange_rate?: string;
+  exchange_rate?: string;
   staking?: boolean;
   staking_player?: string;
   shares_income?: number;
@@ -43,8 +43,9 @@ export interface Session {
   third_blind?: number;
   ante?: number;
   // Tournament only
-  addon_costs?: number;
-  bounty_winnings?: number;
+  addon_cost?: number;
+  bounty_won?: number;
+  stack_history?: unknown[];
   place?: number;
   itm?: number;
   players?: number;

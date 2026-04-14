@@ -9,7 +9,7 @@ function formatSession(session: Session) {
   const result: Record<string, unknown> = {
     id: session.id,
     type: session.type,
-    startedAt: session.start.replace(" ", "T"),
+    startedAt: session.start,
     location: session.location,
     locationType: session.location_type,
     currency: session.currency,
@@ -17,15 +17,15 @@ function formatSession(session: Session) {
     private: session.private,
   };
 
-  if (session.end != null) result.endedAt = session.end.replace(" ", "T");
+  if (session.end != null) result.endedAt = session.end;
   if (session.amount != null) result.amount = session.amount;
   if (session.buyin != null) result.buyin = session.buyin;
   if (session.cashout != null) result.cashout = session.cashout;
-  if (session.number_of_rebuys != null) result.rebuys = session.number_of_rebuys;
-  if (session.rebuy_costs != null) result.rebuyCosts = session.rebuy_costs;
+  if (session.rebuys != null) result.rebuys = session.rebuys;
+  if (session.rebuy_cost != null) result.rebuyCost = session.rebuy_cost;
   if (session.expenses != null) result.expenses = session.expenses;
   if (session.expenses_in_chips != null) result.expensesInChips = session.expenses_in_chips;
-  if (session.currency_exchange_rate != null) result.currencyExchangeRate = session.currency_exchange_rate;
+  if (session.exchange_rate != null) result.exchangeRate = session.exchange_rate;
   if (session.staking != null) result.staking = session.staking;
   if (session.staking_player != null) result.stakingPlayer = session.staking_player;
   if (session.shares_income != null) result.sharesIncome = session.shares_income;
@@ -44,12 +44,14 @@ function formatSession(session: Session) {
   }
 
   if (session.type === "tournament") {
-    if (session.addon_costs != null) result.addonCosts = session.addon_costs;
-    if (session.bounty_winnings != null) result.bountyWinnings = session.bounty_winnings;
+    if (session.addon_cost != null) result.addonCost = session.addon_cost;
+    if (session.bounty_won != null) result.bountyWon = session.bounty_won;
     if (session.place != null) result.place = session.place;
     if (session.itm != null) result.itm = session.itm;
     if (session.players != null) result.players = session.players;
   }
+
+  if (session.stack_history != null) result.stackHistory = session.stack_history;
 
   return result;
 }

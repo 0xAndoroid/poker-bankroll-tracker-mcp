@@ -8,18 +8,18 @@ import { PbtApiError } from "./errors.js";
 const CASH_SESSION: Session = {
   id: 101,
   type: "cashgame",
-  start: "2026-03-15 19:00:00",
-  end: "2026-03-16 03:00:00",
+  start: "2026-03-15T19:00:00",
+  end: "2026-03-16T03:00:00",
   location: "Bellagio",
   location_type: "Casino",
   currency: "USD",
   buyin: 500,
   cashout: 1200,
-  number_of_rebuys: 0,
-  rebuy_costs: 0,
+  rebuys: 0,
+  rebuy_cost: 0,
   expenses: 0,
   expenses_in_chips: 0,
-  currency_exchange_rate: "1.000000000000",
+  exchange_rate: "1.000000000000",
   staking: false,
   staking_player: "Mike",
   shares_income: 100,
@@ -38,17 +38,17 @@ const CASH_SESSION: Session = {
 const TOURNAMENT_SESSION: Session = {
   id: 102,
   type: "tournament",
-  start: "2026-03-16 12:00:00",
-  end: "2026-03-16 20:00:00",
+  start: "2026-03-16T12:00:00",
+  end: "2026-03-16T20:00:00",
   location: "Aria",
   location_type: "Casino",
   currency: "USD",
   buyin: 200,
   cashout: 800,
-  number_of_rebuys: 0,
-  rebuy_costs: 0,
+  rebuys: 0,
+  rebuy_cost: 0,
   expenses: 0,
-  currency_exchange_rate: "1.000000000000",
+  exchange_rate: "1.000000000000",
   staking: false,
   staking_player: "Sarah",
   private: false,
@@ -56,8 +56,8 @@ const TOURNAMENT_SESSION: Session = {
   game: "NLH",
   table_size: "Full-Ring",
   hands_per_hour: 75,
-  addon_costs: 0,
-  bounty_winnings: 50,
+  addon_cost: 0,
+  bounty_won: 50,
   place: 3,
   itm: 5,
   players: 120,
@@ -68,7 +68,7 @@ const TOURNAMENT_SESSION: Session = {
 const PAYOUT_SESSION: Session = {
   id: 103,
   type: "payout",
-  start: "2026-04-09 12:50:00",
+  start: "2026-04-09T12:50:00",
   location: "",
   location_type: "Home Game",
   currency: "USD",
@@ -79,7 +79,7 @@ const PAYOUT_SESSION: Session = {
 const COSTS_SESSION: Session = {
   id: 104,
   type: "costs",
-  start: "2026-04-09 12:50:00",
+  start: "2026-04-09T12:50:00",
   location: "Blue diamonds (online)",
   location_type: "Online",
   currency: "USD",
@@ -90,7 +90,7 @@ const COSTS_SESSION: Session = {
 const CASINOGAME_SESSION: Session = {
   id: 105,
   type: "casinogame",
-  start: "2026-04-09 12:46:00",
+  start: "2026-04-09T12:46:00",
   location: "Blue diamonds (online)",
   location_type: "Online",
   currency: "USD",
@@ -101,7 +101,7 @@ const CASINOGAME_SESSION: Session = {
 const JACKPOT_SESSION: Session = {
   id: 106,
   type: "jackpot",
-  start: "2026-04-09 12:49:00",
+  start: "2026-04-09T12:49:00",
   location: "Blue diamonds (online)",
   location_type: "Online",
   currency: "USD",
@@ -152,7 +152,7 @@ describe("MCP Tools", () => {
       expect(data[0].id).toBe(101);
       expect(data[0].endedAt).toBe("2026-03-16T03:00:00");
       expect(data[0].expensesInChips).toBe(0);
-      expect(data[0].currencyExchangeRate).toBe("1.000000000000");
+      expect(data[0].exchangeRate).toBe("1.000000000000");
       expect(data[0].private).toBe(false);
       expect(data[0].profit).toBe(700);
       expect(data[0].stakingPlayer).toBe("Mike");
@@ -171,15 +171,15 @@ describe("MCP Tools", () => {
       expect(data[1].limit).toBe("No Limit");
       expect(data[1].tableSize).toBe("Full-Ring");
       expect(data[1].handsPerHour).toBe(75);
-      expect(data[1].addonCosts).toBe(0);
-      expect(data[1].bountyWinnings).toBe(50);
+      expect(data[1].addonCost).toBe(0);
+      expect(data[1].bountyWon).toBe(50);
       expect(data[1].place).toBe(3);
       expect(data[1].itm).toBe(5);
       expect(data[1].players).toBe(120);
       expect(data[1].sharesIncome).toBe(200);
       expect(data[1].sharesOutgoing).toBe(0);
-      expect(data[0]).not.toHaveProperty("addonCosts");
-      expect(data[0]).not.toHaveProperty("bountyWinnings");
+      expect(data[0]).not.toHaveProperty("addonCost");
+      expect(data[0]).not.toHaveProperty("bountyWon");
       expect(data[0]).not.toHaveProperty("place");
       expect(data[1]).not.toHaveProperty("stakes");
       expect(data[1]).not.toHaveProperty("smallBlind");
@@ -205,10 +205,10 @@ describe("MCP Tools", () => {
         "buyin",
         "cashout",
         "rebuys",
-        "rebuyCosts",
+        "rebuyCost",
         "expenses",
         "expensesInChips",
-        "currencyExchangeRate",
+        "exchangeRate",
         "staking",
         "stakingPlayer",
         "game",
@@ -220,8 +220,8 @@ describe("MCP Tools", () => {
         "bigBlind",
         "thirdBlind",
         "ante",
-        "addonCosts",
-        "bountyWinnings",
+        "addonCost",
+        "bountyWon",
         "place",
         "itm",
         "players",
