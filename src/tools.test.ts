@@ -19,7 +19,7 @@ const CASH_SESSION: Session = {
   rebuy_cost: 0,
   expenses: 0,
   expenses_in_chips: 0,
-  exchange_rate: "1.000000000000",
+  exchange_rate: 1,
   staking: false,
   staking_player: "Mike",
   shares_income: 100,
@@ -48,7 +48,7 @@ const TOURNAMENT_SESSION: Session = {
   rebuys: 0,
   rebuy_cost: 0,
   expenses: 0,
-  exchange_rate: "1.000000000000",
+  exchange_rate: 1,
   staking: false,
   staking_player: "Sarah",
   private: false,
@@ -56,11 +56,15 @@ const TOURNAMENT_SESSION: Session = {
   game: "NLH",
   table_size: "Full-Ring",
   hands_per_hour: 75,
+  small_blind: 100,
+  big_blind: 200,
+  ante: 25,
   addon_cost: 0,
   bounty_won: 50,
   place: 3,
   itm: 5,
   players: 120,
+  start_stack: 10000,
   shares_income: 200,
   shares_outgoing: 0,
 };
@@ -152,7 +156,7 @@ describe("MCP Tools", () => {
       expect(data[0].id).toBe(101);
       expect(data[0].endedAt).toBe("2026-03-16T03:00:00");
       expect(data[0].expensesInChips).toBe(0);
-      expect(data[0].exchangeRate).toBe("1.000000000000");
+      expect(data[0].exchangeRate).toBe(1);
       expect(data[0].private).toBe(false);
       expect(data[0].profit).toBe(700);
       expect(data[0].stakingPlayer).toBe("Mike");
@@ -165,6 +169,7 @@ describe("MCP Tools", () => {
       expect(data[0].ante).toBe(0);
       expect(data[1].id).toBe(102);
       expect(data[1].endedAt).toBe("2026-03-16T20:00:00");
+      expect(data[1].exchangeRate).toBe(1);
       expect(data[1].stakingPlayer).toBe("Sarah");
       expect(data[1].profit).toBe(600);
       expect(data[1].game).toBe("NLH");
@@ -175,16 +180,20 @@ describe("MCP Tools", () => {
       expect(data[1].bountyWon).toBe(50);
       expect(data[1].place).toBe(3);
       expect(data[1].itm).toBe(5);
+      expect(data[1].smallBlind).toBe(100);
+      expect(data[1].bigBlind).toBe(200);
+      expect(data[1].ante).toBe(25);
       expect(data[1].players).toBe(120);
+      expect(data[1].startStack).toBe(10000);
       expect(data[1].sharesIncome).toBe(200);
       expect(data[1].sharesOutgoing).toBe(0);
       expect(data[0]).not.toHaveProperty("addonCost");
       expect(data[0]).not.toHaveProperty("bountyWon");
       expect(data[0]).not.toHaveProperty("place");
+      expect(data[0]).not.toHaveProperty("startStack");
       expect(data[1]).not.toHaveProperty("stakes");
-      expect(data[1]).not.toHaveProperty("smallBlind");
-      expect(data[1]).not.toHaveProperty("bigBlind");
-      expect(data[1]).not.toHaveProperty("ante");
+      expect(data[1]).not.toHaveProperty("thirdBlind");
+      expect(data[1]).not.toHaveProperty("expensesInChips");
     });
 
     it("formats simple session types with amount", async () => {
@@ -225,6 +234,7 @@ describe("MCP Tools", () => {
         "place",
         "itm",
         "players",
+        "startStack",
         "sharesIncome",
         "sharesOutgoing",
       ];

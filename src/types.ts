@@ -9,46 +9,54 @@ export const SESSION_TYPES = [
 
 export type SessionType = (typeof SESSION_TYPES)[number];
 
+export interface StackEntry {
+  timestamp: number;
+  change: number;
+  stack: number;
+}
+
 export interface Session {
+  // All session types
   id: number;
   type: SessionType;
   start: string;
+  end?: string;
   location: string;
   location_type: string;
   currency: string;
+  exchange_rate?: number;
+  staking?: boolean;
   private: boolean;
-  // Full sessions (cashgame, tournament)
-  end?: string;
+  // Simple sessions (payout, costs, casinogame, jackpot)
+  amount?: number;
+  // Cashgame/tournament
   buyin?: number;
   cashout?: number;
   rebuys?: number;
   rebuy_cost?: number;
   expenses?: number;
-  expenses_in_chips?: number;
-  exchange_rate?: string;
-  staking?: boolean;
-  staking_player?: string;
-  shares_income?: number;
-  shares_outgoing?: number;
-  // Simple sessions (payout, costs, casinogame, jackpot)
-  amount?: number;
-  // Cash game and tournament shared
   limit?: string;
   game?: string;
   table_size?: string;
-  hands_per_hour?: number;
-  // Cash game only
   small_blind?: number;
   big_blind?: number;
-  third_blind?: number;
   ante?: number;
+  hands_per_hour?: number;
+  stack_history?: StackEntry[];
+  // Cashgame only
+  third_blind?: number;
+  expenses_in_chips?: number;
   // Tournament only
   addon_cost?: number;
   bounty_won?: number;
-  stack_history?: unknown[];
   place?: number;
   itm?: number;
   players?: number;
+  start_stack?: number;
+  // Shared (cashgame + tournament)
+  shares_income?: number;
+  shares_outgoing?: number;
+  staking_player?: string;
 }
 
 export interface SessionsResponse {
