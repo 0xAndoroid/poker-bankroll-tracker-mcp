@@ -247,8 +247,18 @@ describe("computeStats", () => {
   it("includes simple session types in aggregates", () => {
     const sessions = [
       makeCashGame({ id: 1, buyin: 500, cashout: 1200, location: "Bellagio" }),
-      makeSimpleSession("jackpot", { id: 2, amount: 100, location: "Bellagio", start: "2026-03-15 20:00:00" }),
-      makeSimpleSession("costs", { id: 3, amount: -50, location: "Online", start: "2026-04-01 10:00:00" }),
+      makeSimpleSession("jackpot", {
+        id: 2,
+        amount: 100,
+        location: "Bellagio",
+        start: "2026-03-15 20:00:00",
+      }),
+      makeSimpleSession("costs", {
+        id: 3,
+        amount: -50,
+        location: "Online",
+        start: "2026-04-01 10:00:00",
+      }),
     ];
     const stats = computeStats(sessions);
 
