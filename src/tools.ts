@@ -2,7 +2,7 @@ import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { PbtApiClient } from "./api.js";
 import { getFormattedSessions, getSessionStats } from "./core.js";
 import { PbtApiError } from "./errors.js";
-import { sessionFilterSchema } from "./filters.js";
+import { FilterValidationError, sessionFilterSchema } from "./filters.js";
 
 function toolError(message: string) {
   return { content: [{ type: "text" as const, text: message }], isError: true };
@@ -25,7 +25,9 @@ export function registerTools(server: McpServer, client: PbtApiClient): void {
       try {
         return toolResult(await getFormattedSessions(client, args));
       } catch (error) {
-        if (error instanceof PbtApiError) return toolError(error.message);
+        if (error instanceof PbtApiError || error instanceof FilterValidationError) {
+          return toolError(error.message);
+        }
         throw error;
       }
     },
@@ -43,7 +45,9 @@ export function registerTools(server: McpServer, client: PbtApiClient): void {
       try {
         return toolResult(await getSessionStats(client, args));
       } catch (error) {
-        if (error instanceof PbtApiError) return toolError(error.message);
+        if (error instanceof PbtApiError || error instanceof FilterValidationError) {
+          return toolError(error.message);
+        }
         throw error;
       }
     },

@@ -269,14 +269,25 @@ describe("MCP Tools", () => {
       }
     });
 
-    it("passes filters to API client", async () => {
+    it("validates and normalizes filters before calling API client", async () => {
       const handler = tools.get("get_sessions")!;
-      await handler({ start: "2026-01-01", type: "cashgame" });
+      await handler({ start: "2026-01-01", type: "cashgame", currency: "usd", staking: false });
 
       expect(client.fetchSessions).toHaveBeenCalledWith({
         start: "2026-01-01",
         type: "cashgame",
+        currency: "USD",
+        staking: false,
       });
+    });
+
+    it("returns error on invalid filters", async () => {
+      const handler = tools.get("get_sessions")!;
+      const result = await handler({ start: "2026-13-01" });
+
+      expect(result.isError).toBe(true);
+      expect(result.content[0].text).toContain("Invalid date");
+      expect(client.fetchSessions).not.toHaveBeenCalled();
     });
 
     it("returns error on API failure", async () => {
