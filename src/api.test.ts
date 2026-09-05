@@ -52,7 +52,6 @@ describe("PbtApiClient", () => {
 
   beforeEach(() => {
     client = new PbtApiClient("test-api-key");
-    client.clearCache();
     vi.restoreAllMocks();
   });
 

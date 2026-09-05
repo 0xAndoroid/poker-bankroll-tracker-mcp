@@ -2,13 +2,7 @@
 import { Command, InvalidArgumentError, Option } from "commander";
 import { PbtApiClient } from "./api.js";
 import { getFormattedSessions, getSessionStats } from "./core.js";
-import { PbtApiError } from "./errors.js";
-import {
-  parseCurrencyFilter,
-  parseDateFilter,
-  parseTypeFilter,
-  validateSessionFilters,
-} from "./filters.js";
+import { parseCurrencyFilter, parseDateFilter, parseTypeFilter } from "./filters.js";
 import { renderSessionsTable, renderStats } from "./cli-output.js";
 import type { SessionFilters } from "./types.js";
 
@@ -71,7 +65,9 @@ Examples:
     const client = makeClient();
     const filters = filtersFromOptions(options);
     const sessions = await getFormattedSessions(client, filters);
-    writeOutput(options.json, sessions, renderSessionsTable(sessions));
+    process.stdout.write(
+      `${options.json ? JSON.stringify(sessions, null, 2) : renderSessionsTable(sessions)}\n`,
+    );
   });
 
 addFilterOptions(
@@ -100,13 +96,15 @@ Examples:
     const client = makeClient();
     const filters = filtersFromOptions(options);
     const stats = await getSessionStats(client, filters);
-    writeOutput(options.json, stats, renderStats(stats));
+    process.stdout.write(`${options.json ? JSON.stringify(stats, null, 2) : renderStats(stats)}\n`);
   });
 
 try {
   await program.parseAsync();
 } catch (error) {
-  handleError(error);
+  const message = error instanceof Error ? error.message : String(error);
+  process.stderr.write(`Error: ${message}\n`);
+  process.exit(1);
 }
 
 function addFilterOptions(command: Command): Command {
@@ -149,13 +147,13 @@ function parseOption(parser: (value: string) => string) {
 }
 
 function filtersFromOptions(options: CliOptions): SessionFilters {
-  return validateSessionFilters({
+  return {
     start: options.start,
     end: options.end,
     currency: options.currency,
     type: options.type,
     staking: options.staking === true ? true : undefined,
-  });
+  };
 }
 
 function makeClient(): PbtApiClient {
@@ -164,15 +162,4 @@ function makeClient(): PbtApiClient {
     throw new Error("PBT_API_KEY environment variable is required. See --help.");
   }
   return new PbtApiClient(apiKey);
-}
-
-function writeOutput(json: boolean | undefined, value: unknown, text: string): void {
-  process.stdout.write(json ? `${JSON.stringify(value, null, 2)}\n` : `${text}\n`);
-}
-
-function handleError(error: unknown): never {
-  const message =
-    error instanceof PbtApiError || error instanceof Error ? error.message : String(error);
-  process.stderr.write(`Error: ${message}\n`);
-  process.exit(1);
 }

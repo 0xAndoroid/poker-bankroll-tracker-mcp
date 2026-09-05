@@ -314,22 +314,8 @@ describe("MCP Tools", () => {
       expect(data.winRate).toBe(100);
       expect(data.avgSessionProfit).toBe(650);
       expect(data.currencies).toEqual(["USD"]);
-    });
-
-    it("includes location breakdown", async () => {
-      const handler = tools.get("get_stats")!;
-      const result = await handler({});
-      const data = JSON.parse(result.content[0].text);
-
       expect(data.byLocation["Bellagio"]).toEqual({ sessions: 1, profit: 700 });
       expect(data.byLocation["Aria"]).toEqual({ sessions: 1, profit: 600 });
-    });
-
-    it("includes stakes breakdown for cash games only", async () => {
-      const handler = tools.get("get_stats")!;
-      const result = await handler({});
-      const data = JSON.parse(result.content[0].text);
-
       expect(data.byStakes["NLH 1/2"]).toEqual({ sessions: 1, profit: 700 });
       expect(Object.keys(data.byStakes)).toHaveLength(1);
     });

@@ -55,22 +55,14 @@ function renderBucketTable(buckets: Record<string, { sessions: number; profit: n
 
 function renderTable(headers: string[], rows: Array<Record<string, string>>): string {
   const widths = headers.map((header) =>
-    Math.max(header.length, ...rows.map((row) => displayWidth(row[header] ?? ""))),
+    rows.reduce((width, row) => Math.max(width, (row[header] ?? "").length), header.length),
   );
   const formatRow = (row: Record<string, string>) =>
-    headers.map((header, index) => pad(row[header] ?? "", widths[index])).join("  ");
+    headers.map((header, index) => (row[header] ?? "").padEnd(widths[index])).join("  ");
 
   return [
-    headers.map((header, index) => pad(header, widths[index])).join("  "),
+    headers.map((header, index) => header.padEnd(widths[index])).join("  "),
     widths.map((width) => "-".repeat(width)).join("  "),
     ...rows.map(formatRow),
   ].join("\n");
-}
-
-function displayWidth(value: string): number {
-  return value.length;
-}
-
-function pad(value: string, width: number): string {
-  return value + " ".repeat(Math.max(0, width - displayWidth(value)));
 }
