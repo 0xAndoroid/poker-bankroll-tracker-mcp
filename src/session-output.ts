@@ -56,7 +56,3 @@ export function formatSession(session: Session): FormattedSession {
 
   return result;
 }
-
-export function formatSessions(sessions: Session[]): FormattedSession[] {
-  return sessions.map(formatSession);
-}
