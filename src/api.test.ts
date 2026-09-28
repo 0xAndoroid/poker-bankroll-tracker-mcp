@@ -147,15 +147,4 @@ describe("PbtApiClient", () => {
 
     expect(fetchSpy).toHaveBeenCalledTimes(2);
   });
-
-  it("refetches after cache is cleared", async () => {
-    const fetchSpy = mockFetchOk([MOCK_SESSION]);
-    vi.stubGlobal("fetch", fetchSpy);
-
-    await client.fetchSessions();
-    client.clearCache();
-    await client.fetchSessions();
-
-    expect(fetchSpy).toHaveBeenCalledTimes(2);
-  });
 });

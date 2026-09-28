@@ -55,8 +55,4 @@ export class PbtApiClient {
     this.cache.set(cacheKey, { sessions: body.data, timestamp: Date.now() });
     return body.data;
   }
-
-  clearCache(): void {
-    this.cache.clear();
-  }
 }
