@@ -43,19 +43,6 @@ export interface Stats {
 }
 
 export function computeStats(sessions: Session[]): Stats {
-  if (sessions.length === 0) {
-    return {
-      totalSessions: 0,
-      totalProfit: 0,
-      winRate: 0,
-      avgSessionProfit: 0,
-      currencies: [],
-      byLocation: {},
-      byStakes: {},
-      byMonth: {},
-    };
-  }
-
   let totalProfit = 0;
   let winningSessions = 0;
   const currencies = new Set<string>();
@@ -90,8 +77,8 @@ export function computeStats(sessions: Session[]): Stats {
   return {
     totalSessions: sessions.length,
     totalProfit: round2(totalProfit),
-    winRate: round2((winningSessions / sessions.length) * 100),
-    avgSessionProfit: round2(totalProfit / sessions.length),
+    winRate: round2((winningSessions / (sessions.length || 1)) * 100),
+    avgSessionProfit: round2(totalProfit / (sessions.length || 1)),
     currencies: [...currencies].sort(),
     byLocation,
     byStakes,
