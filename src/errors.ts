@@ -1,8 +1,5 @@
 export class PbtApiError extends Error {
-  constructor(
-    message: string,
-    public readonly statusCode?: number,
-  ) {
+  constructor(message: string) {
     super(message);
     this.name = "PbtApiError";
   }
@@ -10,14 +7,14 @@ export class PbtApiError extends Error {
 
 export class AuthError extends PbtApiError {
   constructor() {
-    super("Authentication failed — check PBT_API_KEY.", 401);
+    super("Authentication failed — check PBT_API_KEY.");
     this.name = "AuthError";
   }
 }
 
 export class RateLimitError extends PbtApiError {
   constructor() {
-    super("Rate limit exceeded (20 requests/15min). Try again later.", 429);
+    super("Rate limit exceeded (20 requests/15min). Try again later.");
     this.name = "RateLimitError";
   }
 }

@@ -291,9 +291,7 @@ describe("MCP Tools", () => {
     });
 
     it("returns error on API failure", async () => {
-      vi.spyOn(client, "fetchSessions").mockRejectedValue(
-        new PbtApiError("Rate limit exceeded", 429),
-      );
+      vi.spyOn(client, "fetchSessions").mockRejectedValue(new PbtApiError("Rate limit exceeded"));
 
       const handler = tools.get("get_sessions")!;
       const result = await handler({});

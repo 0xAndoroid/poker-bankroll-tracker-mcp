@@ -45,10 +45,7 @@ export class PbtApiClient {
     if (response.status === 401 || response.status === 403) throw new AuthError();
     if (response.status === 429) throw new RateLimitError();
     if (!response.ok) {
-      throw new PbtApiError(
-        `API returned ${response.status}: ${response.statusText}`,
-        response.status,
-      );
+      throw new PbtApiError(`API returned ${response.status}: ${response.statusText}`);
     }
 
     const body = (await response.json()) as SessionsResponse;
