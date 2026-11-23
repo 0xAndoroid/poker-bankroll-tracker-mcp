@@ -3,15 +3,19 @@ name: CI
 on:
   pull_request:
     branches: [main]
-  push:
-    branches: [main]
+    paths-ignore:
+      - "**/*.md"
+      - LICENSE
+  schedule:
+    - cron: "47 7 * * *"
+  workflow_dispatch:
 
 permissions:
   contents: read
 
 concurrency:
-  group: ci-${{ github.ref }}
-  cancel-in-progress: true
+  group: ci-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   test:
@@ -28,4 +32,20 @@ jobs:
       - run: npm run lint
       - run: npm run format:check
       - run: npm run build
+      - name: Smoke-test the CLI
+        if: github.event_name == 'pull_request'
+        shell: bash
+        env:
+          PBT_API_KEY: ci-fixture
+        run: |
+          node --import ./.github/fixtures/session.mjs dist/cli.js \
+            stats --start 2026-03-15 --type cashgame --currency USD --json |
+            node --input-type=module -e '
+              import assert from "node:assert/strict";
+              import { readFileSync } from "node:fs";
+              const { totalSessions, totalProfit } = JSON.parse(readFileSync(0, "utf8"));
+              assert.equal(totalSessions, 1);
+              assert.equal(totalProfit, 700);
+            '
       - run: npm test
+        if: github.event_name != 'pull_request'
