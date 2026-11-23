@@ -18,8 +18,34 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  nightly:
+    name: Check for changes since the last nightly
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      actions: read
+      contents: read
+    outputs:
+      run_suite: ${{ steps.compare.outputs.run_suite }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+      - id: compare
+        run: node .github/scripts/nightly-changes.mjs
+        env:
+          GH_TOKEN: ${{ github.token }}
+      - name: Skip unchanged SHA
+        if: steps.compare.outputs.run_suite == 'false'
+        run: echo 'This commit is already covered by a completed nightly.'
+
   test:
     name: Lint, format, build, test
+    needs: nightly
+    if: >-
+      ${{ !cancelled() && (github.event_name != 'schedule' ||
+      (needs.nightly.result == 'success' && needs.nightly.outputs.run_suite == 'true')) }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
