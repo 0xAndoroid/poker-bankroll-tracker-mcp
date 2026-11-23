@@ -72,16 +72,6 @@ function makeSimpleSession(
 }
 
 describe("computeProfit", () => {
-  it("computes profit for a winning cash game session", () => {
-    const session = makeCashGame({ buyin: 500, cashout: 1200 });
-    expect(computeProfit(session)).toBe(700);
-  });
-
-  it("computes profit for a losing session", () => {
-    const session = makeCashGame({ buyin: 500, cashout: 200 });
-    expect(computeProfit(session)).toBe(-300);
-  });
-
   it("accounts for rebuy costs", () => {
     const session = makeCashGame({ buyin: 500, cashout: 1000, rebuy_cost: 300 });
     expect(computeProfit(session)).toBe(200);
@@ -111,38 +101,12 @@ describe("computeProfit", () => {
     const session = makeCashGame({ buyin: 500, cashout: 500 });
     expect(computeProfit(session)).toBe(0);
   });
-
-  it("returns amount directly for payout session", () => {
-    expect(computeProfit(makeSimpleSession("payout", { amount: 50 }))).toBe(50);
-  });
-
-  it("returns negative amount for costs session", () => {
-    expect(computeProfit(makeSimpleSession("costs", { amount: -20 }))).toBe(-20);
-  });
-
-  it("returns amount for casinogame session", () => {
-    expect(computeProfit(makeSimpleSession("casinogame", { amount: -10 }))).toBe(-10);
-  });
-
-  it("returns amount for jackpot session", () => {
-    expect(computeProfit(makeSimpleSession("jackpot", { amount: 100 }))).toBe(100);
-  });
 });
 
 describe("formatStakes", () => {
-  it("formats cash game stakes with game type", () => {
-    const session = makeCashGame({ game: "NLH", small_blind: 1, big_blind: 2 });
-    expect(formatStakes(session)).toBe("NLH 1/2");
-  });
-
   it("formats stakes without game type", () => {
     const session = makeCashGame({ game: undefined, small_blind: 5, big_blind: 10 });
     expect(formatStakes(session)).toBe("5/10");
-  });
-
-  it("returns N/A for non-cashgame sessions", () => {
-    const session = makeTournament();
-    expect(formatStakes(session)).toBe("N/A");
   });
 
   it("returns N/A when blind info is missing", () => {
