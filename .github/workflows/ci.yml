@@ -25,27 +25,35 @@ jobs:
     timeout-minutes: 3
     permissions:
       actions: read
-      contents: read
     outputs:
-      run_suite: ${{ steps.compare.outputs.run_suite }}
+      skip_suite: ${{ steps.compare.outputs.skip_suite }}
     steps:
-      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
-        with:
-          persist-credentials: false
       - id: compare
-        run: node .github/scripts/nightly-changes.mjs
+        shell: bash
         env:
           GH_TOKEN: ${{ github.token }}
-      - name: Skip unchanged SHA
-        if: steps.compare.outputs.run_suite == 'false'
-        run: echo 'This commit is already covered by a completed nightly.'
+        run: |
+          if [[ ! $GITHUB_SHA =~ ^[0-9a-f]{40}$ || ! $GITHUB_RUN_ID =~ ^[1-9][0-9]*$ || ! $GITHUB_RUN_NUMBER =~ ^[1-9][0-9]*$ ]]; then
+            exit 0
+          fi
+          previous_sha=$(
+            gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?branch=main&event=schedule&status=completed&per_page=100" |
+              jq -r --argjson id "$GITHUB_RUN_ID" --argjson number "$GITHUB_RUN_NUMBER" '
+                [.workflow_runs[] | select(.event == "schedule" and .head_branch == "main" and .status == "completed"
+                  and .id != $id and .run_number > 0 and .run_number < $number
+                  and (.conclusion == "success" or .conclusion == "failure"))]
+                | max_by(.run_number).head_sha // empty'
+          ) || previous_sha=
+          if [[ "$previous_sha" == "$GITHUB_SHA" ]]; then
+            printf 'skip_suite=true\n' >> "$GITHUB_OUTPUT"
+          fi
 
   test:
     name: Lint, format, build, test
     needs: nightly
     if: >-
       ${{ !cancelled() && (github.event_name != 'schedule' ||
-      (needs.nightly.result == 'success' && needs.nightly.outputs.run_suite == 'true')) }}
+      needs.nightly.result != 'success' || needs.nightly.outputs.skip_suite != 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
