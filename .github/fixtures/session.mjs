@@ -1,8 +1,10 @@
 import assert from "node:assert/strict";
 
-globalThis.fetch = async (url, { headers }) => {
+globalThis.fetch = async (input, init) => {
+  const request = new Request(input, init);
+  const url = new URL(request.url);
   assert.equal(url.origin + url.pathname, "https://api.pokerbankrolltracker.net/v1/sessions");
-  assert.equal(headers.Authorization, "Bearer ci-fixture");
+  assert.equal(request.headers.get("authorization"), "Bearer ci-fixture");
   assert.equal(url.searchParams.get("start"), "2026-03-15");
   assert.equal(url.searchParams.get("type"), "cashgame");
   assert.equal(url.searchParams.get("currency"), "USD");
