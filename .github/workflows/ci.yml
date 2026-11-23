@@ -36,15 +36,13 @@ jobs:
           if [[ ! $GITHUB_SHA =~ ^[0-9a-f]{40}$ || ! $GITHUB_RUN_ID =~ ^[1-9][0-9]*$ || ! $GITHUB_RUN_NUMBER =~ ^[1-9][0-9]*$ ]]; then
             exit 0
           fi
-          previous_sha=$(
-            gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?branch=main&event=schedule&status=completed&per_page=100" |
-              jq -r --argjson id "$GITHUB_RUN_ID" --argjson number "$GITHUB_RUN_NUMBER" '
+          if gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?branch=main&event=schedule&status=completed&per_page=100" |
+              jq -e --arg sha "$GITHUB_SHA" --argjson id "$GITHUB_RUN_ID" --argjson number "$GITHUB_RUN_NUMBER" '
                 [.workflow_runs[] | select(.event == "schedule" and .head_branch == "main" and .status == "completed"
                   and .id != $id and .run_number > 0 and .run_number < $number
                   and (.conclusion == "success" or .conclusion == "failure"))]
-                | max_by(.run_number).head_sha // empty'
-          ) || previous_sha=
-          if [[ "$previous_sha" == "$GITHUB_SHA" ]]; then
+                | max_by(.run_number)
+                | (.id | type) == "number" and .id > 0 and .head_sha == $sha' > /dev/null; then
             printf 'skip_suite=true\n' >> "$GITHUB_OUTPUT"
           fi
 
