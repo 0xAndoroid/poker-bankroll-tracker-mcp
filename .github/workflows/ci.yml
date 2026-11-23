@@ -18,8 +18,40 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  nightly:
+    name: Check for changes since the last nightly
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    permissions:
+      actions: read
+    outputs:
+      skip_suite: ${{ steps.compare.outputs.skip_suite }}
+    steps:
+      - id: compare
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          if [[ ! $GITHUB_SHA =~ ^[0-9a-f]{40}$ || ! $GITHUB_RUN_ID =~ ^[1-9][0-9]*$ || ! $GITHUB_RUN_NUMBER =~ ^[1-9][0-9]*$ ]]; then
+            exit 0
+          fi
+          if gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?branch=main&event=schedule&status=completed&per_page=100" |
+              jq -e --arg sha "$GITHUB_SHA" --argjson id "$GITHUB_RUN_ID" --argjson number "$GITHUB_RUN_NUMBER" '
+                [.workflow_runs[] | select(.event == "schedule" and .head_branch == "main" and .status == "completed"
+                  and .id != $id and .run_number > 0 and .run_number < $number
+                  and (.conclusion == "success" or .conclusion == "failure"))]
+                | max_by(.run_number)
+                | (.id | type) == "number" and .id > 0 and .head_sha == $sha' > /dev/null; then
+            printf 'skip_suite=true\n' >> "$GITHUB_OUTPUT"
+          fi
+
   test:
     name: Lint, format, build, test
+    needs: nightly
+    if: >-
+      ${{ !cancelled() && (github.event_name != 'schedule' ||
+      needs.nightly.result != 'success' || needs.nightly.outputs.skip_suite != 'true') }}
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
