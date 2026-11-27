@@ -63,10 +63,30 @@ export interface SessionsResponse {
   data: Session[];
 }
 
-export interface SessionFilters {
+export interface Replay {
+  id: number;
+  date: string;
+  private: boolean;
+  hub: boolean;
+  visits: number;
+  replay: {
+    game: { g: string; t: string; sb: number; bb: number };
+  };
+}
+
+export interface EntryFilters {
+  id?: number;
   start?: string;
   end?: string;
+}
+
+export interface SessionFilters extends EntryFilters {
   type?: string;
   currency?: string;
   staking?: boolean;
+}
+
+export interface ReplayFilters extends EntryFilters {
+  private?: boolean;
+  hub?: boolean;
 }

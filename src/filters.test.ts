@@ -2,11 +2,19 @@ import { describe, expect, it } from "vitest";
 import {
   parseCurrencyFilter,
   parseDateFilter,
+  parseIdFilter,
   parseTypeFilter,
   validateSessionFilters,
 } from "./filters.js";
 
 describe("filter parsing", () => {
+  it("accepts only positive safe integers in decimal notation as IDs", () => {
+    expect(parseIdFilter("42")).toBe(42);
+    for (const id of ["0", "-1", " 1", "1e2", "1.5", "9007199254740992"]) {
+      expect(() => parseIdFilter(id)).toThrow(/Invalid ID/);
+    }
+  });
+
   it("accepts valid calendar dates", () => {
     expect(parseDateFilter("2026-02-28")).toBe("2026-02-28");
     expect(parseDateFilter("2024-02-29")).toBe("2024-02-29");

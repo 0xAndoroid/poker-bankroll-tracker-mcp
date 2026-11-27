@@ -1,15 +1,19 @@
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { PbtApiClient } from "./api.js";
-import { getFormattedSessions, getSessionStats } from "./core.js";
+import { getFormattedSessions, getReplays, getSessionStats } from "./core.js";
 import { PbtApiError } from "./errors.js";
-import { FilterValidationError, sessionFilterSchema } from "./filters.js";
+import { FilterValidationError, replayFilterSchema, sessionFilterSchema } from "./filters.js";
 
-function toolError(message: string) {
-  return { content: [{ type: "text" as const, text: message }], isError: true };
-}
-
-function toolResult(data: unknown) {
-  return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
+async function toolResult(result: Promise<unknown>) {
+  try {
+    const data = await result;
+    return { content: [{ type: "text" as const, text: JSON.stringify(data, null, 2) }] };
+  } catch (error) {
+    if (error instanceof PbtApiError || error instanceof FilterValidationError) {
+      return { content: [{ type: "text" as const, text: error.message }], isError: true };
+    }
+    throw error;
+  }
 }
 
 export function registerTools(server: McpServer, client: PbtApiClient): void {
@@ -21,16 +25,7 @@ export function registerTools(server: McpServer, client: PbtApiClient): void {
       inputSchema: sessionFilterSchema,
       annotations: { readOnlyHint: true },
     },
-    async (args) => {
-      try {
-        return toolResult(await getFormattedSessions(client, args));
-      } catch (error) {
-        if (error instanceof PbtApiError || error instanceof FilterValidationError) {
-          return toolError(error.message);
-        }
-        throw error;
-      }
-    },
+    (args) => toolResult(getFormattedSessions(client, args)),
   );
 
   server.registerTool(
@@ -41,15 +36,17 @@ export function registerTools(server: McpServer, client: PbtApiClient): void {
       inputSchema: sessionFilterSchema,
       annotations: { readOnlyHint: true },
     },
-    async (args) => {
-      try {
-        return toolResult(await getSessionStats(client, args));
-      } catch (error) {
-        if (error instanceof PbtApiError || error instanceof FilterValidationError) {
-          return toolError(error.message);
-        }
-        throw error;
-      }
+    (args) => toolResult(getSessionStats(client, args)),
+  );
+
+  server.registerTool(
+    "get_replays",
+    {
+      description:
+        "Fetch saved poker hand replays with their full hand histories. Use a replay ID or a narrow date range to limit the result.",
+      inputSchema: replayFilterSchema,
+      annotations: { readOnlyHint: true },
     },
+    (args) => toolResult(getReplays(client, args)),
   );
 }

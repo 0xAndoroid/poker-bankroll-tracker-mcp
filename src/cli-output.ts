@@ -1,5 +1,6 @@
 import type { FormattedSession } from "./session-output.js";
 import type { Stats } from "./stats.js";
+import type { Replay } from "./types.js";
 
 export function renderSessionsTable(sessions: FormattedSession[]): string {
   if (sessions.length === 0) return "No sessions found.";
@@ -35,6 +36,21 @@ export function renderStats(stats: Stats): string {
   lines.push("", "byMonth:", renderBucketTable(stats.byMonth));
 
   return lines.join("\n");
+}
+
+export function renderReplaysTable(replays: Replay[]): string {
+  if (replays.length === 0) return "No replays found.";
+
+  const rows = replays.map(({ id, date, private: privacy, hub, replay: { game } }) => ({
+    id: String(id),
+    date,
+    type: game.t,
+    game: game.g,
+    blinds: `${game.sb}/${game.bb}`,
+    private: privacy ? "yes" : "no",
+    hub: hub ? "yes" : "no",
+  }));
+  return renderTable(["id", "date", "type", "game", "blinds", "private", "hub"], rows);
 }
 
 function renderBucketTable(buckets: Record<string, { sessions: number; profit: number }>): string {

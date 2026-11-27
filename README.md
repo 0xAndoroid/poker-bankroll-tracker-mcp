@@ -2,7 +2,7 @@
 
 Low-context command-line interface and MCP (Model Context Protocol) server for the [Poker Bankroll Tracker](https://www.pokerbankrolltracker.net/) API.
 
-The CLI is the preferred agent surface: it exposes the same sessions and stats capabilities without loading MCP tool schemas into context. The MCP server remains available for MCP clients.
+The CLI exposes sessions, statistics, and hand replays without loading MCP tool schemas into context. The MCP server provides the same data to MCP clients.
 
 ## Install
 
@@ -44,18 +44,19 @@ The CLI rejects unknown flags/arguments and validates every filter. Errors go to
 Fetch poker sessions with calculated profit/loss.
 
 ```bash
-poker-bankroll-tracker sessions [--start YYYY-MM-DD] [--end YYYY-MM-DD] [--currency USD,EUR] [--type cashgame,tournament,...] [--staking] [--json]
+poker-bankroll-tracker sessions [--id ID] [--start YYYY-MM-DD] [--end YYYY-MM-DD] [--currency USD,EUR] [--type cashgame,tournament,...] [--staking|--no-staking] [--json]
 ```
 
 Flags:
 
 | Flag | Type / Format | Description |
 |------|---------------|-------------|
+| `--id` | positive integer | Fetch a specific session by ID |
 | `--start` | `YYYY-MM-DD` | Start date filter, example `2026-01-01` |
 | `--end` | `YYYY-MM-DD` | End date filter, example `2026-03-31` |
 | `--currency` | comma-separated 3-letter ISO codes | Currency filter, example `USD,EUR` |
 | `--type` | comma-separated enum values | One or more of `cashgame`, `tournament`, `payout`, `costs`, `casinogame`, `jackpot` |
-| `--staking` | boolean flag | Filter to staking sessions |
+| `--staking` / `--no-staking` | boolean flags | Filter to staking or non-staking sessions |
 | `--json` | boolean flag | Emit machine-parseable JSON |
 
 Examples:
@@ -71,7 +72,7 @@ poker-bankroll-tracker sessions --staking --json
 Compute aggregate statistics: total profit, win rate, average session profit, total sessions, breakdowns by location/stakes/month.
 
 ```bash
-poker-bankroll-tracker stats [--start YYYY-MM-DD] [--end YYYY-MM-DD] [--currency USD,EUR] [--type cashgame,tournament,...] [--staking] [--json]
+poker-bankroll-tracker stats [--id ID] [--start YYYY-MM-DD] [--end YYYY-MM-DD] [--currency USD,EUR] [--type cashgame,tournament,...] [--staking|--no-staking] [--json]
 ```
 
 Flags are identical to `sessions`.
@@ -83,6 +84,18 @@ poker-bankroll-tracker stats --start 2026-01-01
 poker-bankroll-tracker stats --type cashgame --currency USD
 poker-bankroll-tracker stats --staking --json
 ```
+
+### `replays`
+
+Fetch saved poker hand replays. The default table shows the replay ID, creation date in UTC, game, blinds, privacy and analysis hub status. Use `--json` for the full hand history, including players, boards, and actions.
+
+```bash
+poker-bankroll-tracker replays [--id ID] [--start YYYY-MM-DD] [--end YYYY-MM-DD] [--private|--no-private] [--hub|--no-hub] [--json]
+poker-bankroll-tracker replays --start 2026-03-01 --end 2026-03-31 --no-hub
+poker-bankroll-tracker replays --id 123 --json
+```
+
+Use `--private` or `--no-private` to match private or non-private replays. Use `--hub` or `--no-hub` to match replays published or not published in the analysis hub. Omitting both forms of a filter leaves that status unrestricted.
 
 ### CLI JSON Output
 
@@ -98,6 +111,8 @@ poker-bankroll-tracker stats --staking --json
 - `byLocation`
 - `byStakes`
 - `byMonth`
+
+`replays --json` returns the same array as `get_replays`. Both preserve the fields returned by the API, including `id`, `date`, `private`, `hub`, `visits`, and the nested `replay` hand history.
 
 ## MCP Configuration
 
@@ -147,6 +162,8 @@ PBT_API_KEY="your-api-key" poker-bankroll-tracker-mcp
 
 ## Available MCP Tools
 
+Unknown filter names are rejected rather than ignored.
+
 ### `get_sessions`
 
 Fetch poker sessions with optional filters. Returns session data with calculated profit/loss.
@@ -157,11 +174,12 @@ Parameters:
 
 | Name | Type | Description |
 |------|------|-------------|
+| `id` | positive integer | Fetch a specific session by ID |
 | `start` | string | Start date (`YYYY-MM-DD`) |
 | `end` | string | End date (`YYYY-MM-DD`) |
 | `type` | string | Session type: `cashgame`, `tournament`, `payout`, `costs`, `casinogame`, `jackpot` (comma-separated) |
 | `currency` | string | ISO currency codes (comma-separated) |
-| `staking` | boolean | Filter by staking sessions |
+| `staking` | boolean | `true` for staking, `false` for non-staking |
 
 All parameters are optional.
 
@@ -183,12 +201,29 @@ Example:
 get_stats({ start: "2026-01-01", type: "cashgame" })
 ```
 
+### `get_replays`
+
+Fetch saved replays with their full hand histories. Use an ID or a narrow date range to limit the response size. All parameters are optional.
+
+| Name | Type | Description |
+|------|------|-------------|
+| `id` | positive integer | Fetch a specific replay by ID |
+| `start` | string | Start of the creation date range (`YYYY-MM-DD`) |
+| `end` | string | End of the creation date range (`YYYY-MM-DD`) |
+| `private` | boolean | Filter by replay privacy status |
+| `hub` | boolean | Filter by publication in the analysis hub |
+
+```text
+get_replays({ id: 123, hub: false })
+```
+
 ## API Notes
 
 - Rate limit: 20 requests per 15 minutes.
 - Base URL: `https://api.pokerbankrolltracker.net/v1`
 - Auth: Bearer token via `PBT_API_KEY`
 - Client cache: responses cached for 10 seconds to reduce API usage.
+- See the [Poker Bankroll Tracker API manual](https://pokerbankrolltracker.net/manual/#api-access) for the replay field reference.
 
 ## Development
 

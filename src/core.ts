@@ -1,6 +1,6 @@
 import type { PbtApiClient } from "./api.js";
-import type { SessionFilters } from "./types.js";
-import { validateSessionFilters } from "./filters.js";
+import type { Replay, ReplayFilters, SessionFilters } from "./types.js";
+import { validateDateFilters, validateSessionFilters } from "./filters.js";
 import { computeStats, type Stats } from "./stats.js";
 import { formatSessions, type FormattedSession } from "./session-output.js";
 
@@ -16,4 +16,11 @@ export async function getSessionStats(
   filters: SessionFilters = {},
 ): Promise<Stats> {
   return computeStats(await client.fetchSessions(validateSessionFilters(filters)));
+}
+
+export async function getReplays(
+  client: PbtApiClient,
+  filters: ReplayFilters = {},
+): Promise<Replay[]> {
+  return client.fetchReplays(validateDateFilters(filters));
 }

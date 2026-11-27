@@ -2,6 +2,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js";
 import { PbtApiClient } from "./api.js";
+import { packageVersion } from "./package-version.js";
 import { registerTools } from "./tools.js";
 
 const apiKey = process.env.PBT_API_KEY;
@@ -12,7 +13,7 @@ if (!apiKey) {
 
 const server = new McpServer({
   name: "poker-bankroll-tracker",
-  version: "1.0.0",
+  version: packageVersion,
 });
 
 const client = new PbtApiClient(apiKey);
