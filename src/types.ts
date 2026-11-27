@@ -59,6 +59,10 @@ export interface Session {
   staking_player?: string;
 }
 
+export interface SessionsResponse {
+  data: Session[];
+}
+
 export interface Replay {
   id: number;
   date: string;
