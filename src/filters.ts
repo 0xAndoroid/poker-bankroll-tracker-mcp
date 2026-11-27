@@ -19,7 +19,7 @@ const entryFilterSchema = {
   end: z.string().describe("End date (YYYY-MM-DD)").optional(),
 };
 
-export const sessionFilterSchema = {
+export const sessionFilterSchema = z.strictObject({
   ...entryFilterSchema,
   type: z
     .string()
@@ -29,16 +29,16 @@ export const sessionFilterSchema = {
     .optional(),
   currency: z.string().describe("Currency filter: ISO codes (comma-separated)").optional(),
   staking: z.boolean().describe("Filter by staking status (true or false)").optional(),
-};
+});
 
-export const replayFilterSchema = {
+export const replayFilterSchema = z.strictObject({
   ...entryFilterSchema,
   private: z.boolean().describe("Filter by whether the replay is private").optional(),
   hub: z
     .boolean()
     .describe("Filter by whether the replay is published in the analysis hub")
     .optional(),
-};
+});
 
 export function parseIdFilter(value: string): number {
   const id = Number(value);

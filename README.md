@@ -162,6 +162,8 @@ PBT_API_KEY="your-api-key" poker-bankroll-tracker-mcp
 
 ## Available MCP Tools
 
+Unknown filter names are rejected rather than ignored.
+
 ### `get_sessions`
 
 Fetch poker sessions with optional filters. Returns session data with calculated profit/loss.

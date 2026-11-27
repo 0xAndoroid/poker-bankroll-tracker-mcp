@@ -323,6 +323,26 @@ describe("MCP Tools", () => {
     });
   });
 
+  it("rejects unknown replay filters without broadening the request", async () => {
+    const fetchFixture = vi.fn();
+    vi.stubGlobal("fetch", fetchFixture);
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    const mcp = new Client({ name: "test-client", version: "0.0.0" });
+
+    try {
+      await server.connect(serverTransport);
+      await mcp.connect(clientTransport);
+      const result = await mcp.callTool({ name: "get_replays", arguments: { privacy: false } });
+      expect(result.isError).toBe(true);
+      expect(result.content).toEqual([{ type: "text", text: expect.stringContaining("privacy") }]);
+      expect(fetchFixture).not.toHaveBeenCalled();
+    } finally {
+      vi.unstubAllGlobals();
+      await mcp.close();
+      await server.close();
+    }
+  });
+
   it("returns the complete replay over MCP and forwards false filters", async () => {
     const replay = {
       id: 42,
