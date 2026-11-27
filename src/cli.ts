@@ -1,29 +1,22 @@
 #!/usr/bin/env node
 import { Command, InvalidArgumentError, Option } from "commander";
 import { PbtApiClient } from "./api.js";
-import { getFormattedSessions, getSessionStats } from "./core.js";
-import { parseCurrencyFilter, parseDateFilter, parseTypeFilter } from "./filters.js";
-import { renderSessionsTable, renderStats } from "./cli-output.js";
-import type { SessionFilters } from "./types.js";
+import { getFormattedSessions, getReplays, getSessionStats } from "./core.js";
+import { parseCurrencyFilter, parseDateFilter, parseIdFilter, parseTypeFilter } from "./filters.js";
+import { renderReplaysTable, renderSessionsTable, renderStats } from "./cli-output.js";
+import { packageVersion } from "./package-version.js";
+import type { ReplayFilters, SessionFilters } from "./types.js";
 
-interface CliOptions {
-  start?: string;
-  end?: string;
-  currency?: string;
-  type?: string;
-  staking?: boolean;
-  json?: boolean;
-}
+type SessionOptions = SessionFilters & { json?: boolean };
+type ReplayOptions = ReplayFilters & { json?: boolean };
 
 const API_RATE_LIMIT_HELP = "API rate limit: 20 requests/15min.";
 
 const program = new Command();
 program
   .name("poker-bankroll-tracker")
-  .description(
-    "Low-context CLI for Poker Bankroll Tracker sessions and stats. Mirrors the MCP tools exactly.",
-  )
-  .version("1.2.0")
+  .description("Fetch sessions, statistics, and hand replays from Poker Bankroll Tracker.")
+  .version(packageVersion)
   .showHelpAfterError("\nRun with --help for usage.")
   .showSuggestionAfterError()
   .allowUnknownOption(false)
@@ -38,10 +31,11 @@ Examples:
   $ PBT_API_KEY=... poker-bankroll-tracker sessions --start 2026-01-01 --end 2026-03-31
   $ poker-bankroll-tracker sessions --type cashgame,tournament --currency USD --json
   $ poker-bankroll-tracker stats --start 2026-01-01 --type cashgame
+  $ poker-bankroll-tracker replays --id 123 --json
 `,
   );
 
-addFilterOptions(
+addSessionFilterOptions(
   program
     .command("sessions")
     .description("Fetch poker sessions with calculated profit/loss.")
@@ -61,16 +55,14 @@ Examples:
   $ poker-bankroll-tracker sessions --staking --json
 `,
   )
-  .action(async (options: CliOptions) => {
-    const client = makeClient();
-    const filters = filtersFromOptions(options);
-    const sessions = await getFormattedSessions(client, filters);
+  .action(async ({ json, ...filters }: SessionOptions) => {
+    const sessions = await getFormattedSessions(makeClient(), filters);
     process.stdout.write(
-      `${options.json ? JSON.stringify(sessions, null, 2) : renderSessionsTable(sessions)}\n`,
+      `${json ? JSON.stringify(sessions, null, 2) : renderSessionsTable(sessions)}\n`,
     );
   });
 
-addFilterOptions(
+addSessionFilterOptions(
   program
     .command("stats")
     .description(
@@ -92,11 +84,39 @@ Examples:
   $ poker-bankroll-tracker stats --staking --json
 `,
   )
-  .action(async (options: CliOptions) => {
-    const client = makeClient();
-    const filters = filtersFromOptions(options);
-    const stats = await getSessionStats(client, filters);
-    process.stdout.write(`${options.json ? JSON.stringify(stats, null, 2) : renderStats(stats)}\n`);
+  .action(async ({ json, ...filters }: SessionOptions) => {
+    const stats = await getSessionStats(makeClient(), filters);
+    process.stdout.write(`${json ? JSON.stringify(stats, null, 2) : renderStats(stats)}\n`);
+  });
+
+addEntryFilterOptions(
+  program
+    .command("replays")
+    .description("Fetch saved poker hand replays.")
+    .allowUnknownOption(false)
+    .allowExcessArguments(false),
+)
+  .option("--private", "Show only private replays")
+  .option("--no-private", "Show only non-private replays")
+  .option("--hub", "Show only replays published in the analysis hub")
+  .option("--no-hub", "Show only replays not published in the analysis hub")
+  .option("--json", "Emit full replay data, including hand histories, as JSON")
+  .addHelpText(
+    "after",
+    `
+Environment:
+  PBT_API_KEY  Required Bearer token. ${API_RATE_LIMIT_HELP}
+
+Examples:
+  $ poker-bankroll-tracker replays --start 2026-03-01 --end 2026-03-31 --no-hub
+  $ poker-bankroll-tracker replays --id 123 --json
+`,
+  )
+  .action(async ({ json, ...filters }: ReplayOptions) => {
+    const replays = await getReplays(makeClient(), filters);
+    process.stdout.write(
+      `${json ? JSON.stringify(replays, null, 2) : renderReplaysTable(replays)}\n`,
+    );
   });
 
 try {
@@ -107,8 +127,13 @@ try {
   process.exit(1);
 }
 
-function addFilterOptions(command: Command): Command {
+function addEntryFilterOptions(command: Command): Command {
   return command
+    .addOption(
+      new Option("--id <id>", "Fetch a specific entry by ID (positive integer)").argParser(
+        parseOption(parseIdFilter),
+      ),
+    )
     .addOption(
       new Option(
         "--start <YYYY-MM-DD>",
@@ -120,7 +145,11 @@ function addFilterOptions(command: Command): Command {
         "--end <YYYY-MM-DD>",
         "End date filter, format YYYY-MM-DD, example 2026-03-31",
       ).argParser(parseOption(parseDateFilter)),
-    )
+    );
+}
+
+function addSessionFilterOptions(command: Command): Command {
+  return addEntryFilterOptions(command)
     .addOption(
       new Option(
         "--currency <ISO[,ISO]>",
@@ -133,26 +162,17 @@ function addFilterOptions(command: Command): Command {
         "Session type filter: cashgame,tournament,payout,costs,casinogame,jackpot",
       ).argParser(parseOption(parseTypeFilter)),
     )
-    .option("--staking", "Filter to staking sessions");
+    .option("--staking", "Filter to staking sessions")
+    .option("--no-staking", "Filter to non-staking sessions");
 }
 
-function parseOption(parser: (value: string) => string) {
-  return (value: string): string => {
+function parseOption<T>(parser: (value: string) => T) {
+  return (value: string): T => {
     try {
       return parser(value);
     } catch (error) {
       throw new InvalidArgumentError(error instanceof Error ? error.message : String(error));
     }
-  };
-}
-
-function filtersFromOptions(options: CliOptions): SessionFilters {
-  return {
-    start: options.start,
-    end: options.end,
-    currency: options.currency,
-    type: options.type,
-    staking: options.staking === true ? true : undefined,
   };
 }
 

@@ -1,4 +1,6 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { PbtApiClient } from "./api.js";
 import { registerTools } from "./tools.js";
@@ -319,5 +321,52 @@ describe("MCP Tools", () => {
       expect(data.byStakes["NLH 1/2"]).toEqual({ sessions: 1, profit: 700 });
       expect(Object.keys(data.byStakes)).toHaveLength(1);
     });
+  });
+
+  it("returns the complete replay over MCP and forwards false filters", async () => {
+    const replay = {
+      id: 42,
+      date: "2026-03-15T19:00:00Z",
+      private: false,
+      hub: false,
+      visits: 0,
+      replay: {
+        v: 2,
+        game: { g: "NL Holdem", t: "Cash Game", sb: 1, bb: 2, seats: 2 },
+        players: [
+          { seat: 1, p: "SB", s: 100 },
+          { seat: 2, p: "BB", s: 100 },
+        ],
+        board: [],
+        actions: [{ p: 1, a: "f" }],
+      },
+    };
+    const fetchFixture = vi.fn().mockResolvedValue(Response.json({ data: [replay] }));
+    vi.stubGlobal("fetch", fetchFixture);
+    const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
+    const mcp = new Client({ name: "test-client", version: "0.0.0" });
+
+    try {
+      await server.connect(serverTransport);
+      await mcp.connect(clientTransport);
+      const result = await mcp.callTool({
+        name: "get_replays",
+        arguments: { id: 42, start: "2026-03-01", end: "2026-03-31", private: false, hub: false },
+      });
+      expect(result.content).toEqual([{ type: "text", text: JSON.stringify([replay], null, 2) }]);
+      const [url] = fetchFixture.mock.calls[0];
+      expect(url.pathname).toBe("/v1/replays");
+      expect(Object.fromEntries(url.searchParams)).toEqual({
+        id: "42",
+        start: "2026-03-01",
+        end: "2026-03-31",
+        private: "false",
+        hub: "false",
+      });
+    } finally {
+      vi.unstubAllGlobals();
+      await mcp.close();
+      await server.close();
+    }
   });
 });

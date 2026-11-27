@@ -1,36 +1,55 @@
-import type { Session, SessionsResponse, SessionFilters } from "./types.js";
+import type { Replay, ReplayFilters, Session, SessionFilters } from "./types.js";
 import { AuthError, NetworkError, PbtApiError, RateLimitError } from "./errors.js";
 
 const BASE_URL = "https://api.pokerbankrolltracker.net/v1";
 const CACHE_TTL_MS = 10 * 1000;
 
-interface CacheEntry {
-  sessions: Session[];
+interface CacheEntry<T> {
+  data: T[];
   timestamp: number;
 }
 
 export class PbtApiClient {
   private readonly apiKey: string;
-  private readonly cache = new Map<string, CacheEntry>();
+  private readonly sessionsCache = new Map<string, CacheEntry<Session>>();
+  private readonly replaysCache = new Map<string, CacheEntry<Replay>>();
 
   constructor(apiKey: string) {
     this.apiKey = apiKey;
   }
 
-  async fetchSessions(filters: SessionFilters = {}): Promise<Session[]> {
-    const cacheKey = JSON.stringify(filters);
-    const cached = this.cache.get(cacheKey);
-    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
-      return cached.sessions;
-    }
+  fetchSessions({ id, start, end, type, currency, staking }: SessionFilters = {}): Promise<
+    Session[]
+  > {
+    return this.fetchData(
+      "sessions",
+      { id, start, end, type, currency, staking },
+      this.sessionsCache,
+    );
+  }
 
-    const url = new URL(`${BASE_URL}/sessions`);
-    if (filters.start) url.searchParams.set("start", filters.start);
-    if (filters.end) url.searchParams.set("end", filters.end);
-    if (filters.type) url.searchParams.set("type", filters.type);
-    if (filters.currency) url.searchParams.set("currency", filters.currency);
-    if (filters.staking !== undefined) {
-      url.searchParams.set("staking", String(filters.staking));
+  fetchReplays({ id, start, end, private: privacy, hub }: ReplayFilters = {}): Promise<Replay[]> {
+    return this.fetchData("replays", { id, start, end, private: privacy, hub }, this.replaysCache);
+  }
+
+  clearCache(): void {
+    this.sessionsCache.clear();
+    this.replaysCache.clear();
+  }
+
+  private async fetchData<T>(
+    endpoint: "sessions" | "replays",
+    filters: Record<string, string | number | boolean | undefined>,
+    cache: Map<string, CacheEntry<T>>,
+  ): Promise<T[]> {
+    const url = new URL(`${BASE_URL}/${endpoint}`);
+    for (const [name, value] of Object.entries(filters)) {
+      if (value != null && value !== "") url.searchParams.set(name, String(value));
+    }
+    const cacheKey = url.search;
+    const cached = cache.get(cacheKey);
+    if (cached && Date.now() - cached.timestamp < CACHE_TTL_MS) {
+      return cached.data;
     }
 
     let response: Response;
@@ -51,12 +70,19 @@ export class PbtApiClient {
       );
     }
 
-    const body = (await response.json()) as SessionsResponse;
-    this.cache.set(cacheKey, { sessions: body.data, timestamp: Date.now() });
-    return body.data;
-  }
-
-  clearCache(): void {
-    this.cache.clear();
+    const body: unknown = await response.json().catch(() => {
+      throw new PbtApiError("API returned invalid JSON.");
+    });
+    if (
+      typeof body !== "object" ||
+      body === null ||
+      !("data" in body) ||
+      !Array.isArray(body.data)
+    ) {
+      throw new PbtApiError("API response is missing a data array.");
+    }
+    const data = body.data as T[];
+    cache.set(cacheKey, { data, timestamp: Date.now() });
+    return data;
   }
 }

@@ -72,6 +72,7 @@ describe("PbtApiClient", () => {
     vi.stubGlobal("fetch", mockFetchOk([]));
 
     await client.fetchSessions({
+      id: 42,
       start: "2026-01-01",
       end: "2026-03-31",
       type: "cashgame,tournament",
@@ -81,6 +82,7 @@ describe("PbtApiClient", () => {
 
     const [url] = vi.mocked(fetch).mock.calls[0];
     const params = new URL(url.toString()).searchParams;
+    expect(params.get("id")).toBe("42");
     expect(params.get("start")).toBe("2026-01-01");
     expect(params.get("end")).toBe("2026-03-31");
     expect(params.get("type")).toBe("cashgame,tournament");
@@ -127,6 +129,16 @@ describe("PbtApiClient", () => {
     await expect(client.fetchSessions()).rejects.toThrow(NetworkError);
   });
 
+  it("reports malformed JSON without including API body text", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(new Response("not JSON")));
+    await expect(client.fetchReplays()).rejects.toThrow(/^API returned invalid JSON\.$/);
+  });
+
+  it("rejects a response without a data array", async () => {
+    vi.stubGlobal("fetch", vi.fn().mockResolvedValue(Response.json({ data: null })));
+    await expect(client.fetchReplays()).rejects.toThrow(/^API response is missing a data array\.$/);
+  });
+
   it("returns cached results within TTL", async () => {
     const fetchSpy = mockFetchOk([MOCK_SESSION]);
     vi.stubGlobal("fetch", fetchSpy);
@@ -146,6 +158,14 @@ describe("PbtApiClient", () => {
     await client.fetchSessions({ start: "2026-02-01" });
 
     expect(fetchSpy).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not serve cached sessions as replays for the same filters", async () => {
+    const fetchSpy = mockFetchOk([]).mockResolvedValueOnce(Response.json({ data: [MOCK_SESSION] }));
+    vi.stubGlobal("fetch", fetchSpy);
+
+    await client.fetchSessions({ id: 1 });
+    expect(await client.fetchReplays({ id: 1 })).toEqual([]);
   });
 
   it("refetches after cache is cleared", async () => {
